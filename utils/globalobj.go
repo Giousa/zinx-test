@@ -36,17 +36,20 @@ var GlobalObject *GlobalObj
 
 func (g *GlobalObj) Reload()  {
 
-	data,err := ioutil.ReadFile("/Users/zhangmengmeng/Documents/CodeResource/go_project/src/zinxProject/zinxV0.4/conf/zinx.json")
-	//data,err := ioutil.ReadFile("conf/zinx.json")
+	//TODO 后期针对这个，做相对文件夹访问处理
+	//data,err := ioutil.ReadFile("/Users/zhangmengmeng/Documents/CodeResource/go_project/src/zinxProject/zinxV0.4/conf/zinx.json")
+	data,err := ioutil.ReadFile("conf/zinx.json")
 	if err != nil{
 		fmt.Println("GlobalObj file Read err:",err)
-		panic(err)
+		return
+		//panic(err)
 	}
 	//将json文件数据解析到struct中
 	err = json.Unmarshal(data,&GlobalObject)
 	if err != nil{
 		fmt.Println("GlobalObj file Unmarshal err:",err)
-		panic(err)
+		//panic(err)
+		return
 	}
 }
 
