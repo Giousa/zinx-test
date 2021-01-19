@@ -6,7 +6,9 @@
 package znet
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"net"
 	"zinx/ziface"
 )
@@ -47,21 +49,48 @@ func (c *Connection) StartReader()  {
 	defer c.Stop()
 
 	for {
-		buf := make([]byte,1024)
-		//n,err := c.Conn.Read(buf)
+		//buf := make([]byte,1024)
+		//
+		//_,err := c.Conn.Read(buf)
 		//if err != nil{
 		//	fmt.Println("reader err : ",err)
 		//	break
 		//}
-		_,err := c.Conn.Read(buf)
+
+		//拆包
+		dp := NewDataPack()
+
+		headData := make([]byte,dp.GetHeadLen())
+		_,err := io.ReadFull(c.GetTCPConnection(),headData)
 		if err != nil{
-			fmt.Println("reader err : ",err)
+			fmt.Println("conn read first err ",err)
 			break
 		}
 
+		msg,err := dp.Unpack(headData)
+		if err != nil{
+			fmt.Println("unpack err ",err)
+			return
+		}
+
+		dataLen := msg.GetDataLen()
+
+		var data []byte
+		if dataLen > 0{
+			data = make([]byte,dataLen)
+			_,err := io.ReadFull(c.GetTCPConnection(),data)
+			if err != nil{
+				fmt.Println("conn read second err ",err)
+				break
+			}
+
+		}
+
+		msg.SetData(data)
+
 		req := Request{
 			conn: c,
-			data: buf,
+			msg: msg,
 		}
 
 		//执行注册的路由方法
@@ -80,6 +109,33 @@ func (c *Connection) StartReader()  {
 	}
 
 }
+
+//服务端发送数据,需要将数据，封包后发送
+func (c *Connection) SendMsg(msgId uint32,data []byte) error{
+
+	if c.isClosed{
+		return errors.New("Connection has closed")
+	}
+
+	//将数据进行封包
+	dp := NewDataPack()
+	msg := NewMegPackage(msgId,data)
+
+	binaryMsg,err := dp.Pack(msg)
+	if err != nil{
+		fmt.Println("Pack msg error ",err)
+		return errors.New("Pack msg error")
+	}
+
+	_,errW := c.GetTCPConnection().Write(binaryMsg)
+	if errW != nil {
+		fmt.Println("Write msg error ",err)
+		return errors.New("Write msg error")
+	}
+
+	return nil
+}
+
 
 //启动链接Start()
 func (c *Connection) Start(){
@@ -118,10 +174,4 @@ func (c *Connection) GetConnID() uint32{
 func (c *Connection) RemoteAddr() net.Addr{
 
 	return c.Conn.RemoteAddr()
-}
-
-//发送数据的方法Send()
-func (c *Connection) Send(data []byte) error{
-
-	return nil
 }
