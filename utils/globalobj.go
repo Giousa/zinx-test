@@ -28,7 +28,7 @@ type GlobalObj struct {
 	MaxConn int
 
 	//包的最大值
-	MaxPackageSize int32
+	MaxPackageSize uint32
 }
 
 
@@ -66,5 +66,5 @@ func init()  {
 	}
 
 	//从conf/zinx.json
-	GlobalObject.Reload()
+	//GlobalObject.Reload()
 }
