@@ -11,7 +11,7 @@ type Message struct {
 	Data    []byte //消息内容
 }
 
-func NewMegPackage(id uint32,data []byte) *Message  {
+func NewMsgPackage(id uint32,data []byte) *Message  {
 
 	return &Message{
 		Id: id,

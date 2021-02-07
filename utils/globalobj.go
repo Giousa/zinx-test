@@ -59,7 +59,7 @@ func init()  {
 	GlobalObject = &GlobalObj{
 		Name: "ZinxServerAPP",
 		Version: "V0.4",
-		TcpPort: 8989,
+		TcpPort: 999,
 		Host: "0.0.0.0",
 		MaxConn: 1000,
 		MaxPackageSize: 4096,

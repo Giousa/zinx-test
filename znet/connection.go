@@ -119,7 +119,7 @@ func (c *Connection) SendMsg(msgId uint32,data []byte) error{
 
 	//将数据进行封包
 	dp := NewDataPack()
-	msg := NewMegPackage(msgId,data)
+	msg := NewMsgPackage(msgId,data)
 
 	binaryMsg,err := dp.Pack(msg)
 	if err != nil{

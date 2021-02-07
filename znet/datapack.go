@@ -9,7 +9,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"zinx/utils"
 	"zinx/ziface"
 )
@@ -61,10 +60,10 @@ func (d *DataPack) Pack(msg ziface.IMessage) ([]byte,error){
 		return nil, err
 	}
 
-	fmt.Println("封包源数据：",msg)
-	fmt.Println("封包源数据：msg.Data",msg.GetData())
-	fmt.Println("封包成功str：",string(dataBuf.Bytes()))
-	fmt.Println("封包成功[]byte：",dataBuf.Bytes())
+	//fmt.Println("封包源数据：",msg)
+	//fmt.Println("封包源数据：msg.Data",msg.GetData())
+	//fmt.Println("封包成功str：",string(dataBuf.Bytes()))
+	//fmt.Println("封包成功[]byte：",dataBuf.Bytes())
 
 	return dataBuf.Bytes(),nil
 }
@@ -72,7 +71,7 @@ func (d *DataPack) Pack(msg ziface.IMessage) ([]byte,error){
 //拆包
 func (d *DataPack) Unpack(binaryData []byte) (ziface.IMessage,error){
 
-	fmt.Println("拆包源数据：",binaryData)
+	//fmt.Println("拆包源数据：",binaryData)
 	//创建一个从输入二进制数据的ioReader
 	dataBuff := bytes.NewReader(binaryData)
 
@@ -93,9 +92,9 @@ func (d *DataPack) Unpack(binaryData []byte) (ziface.IMessage,error){
 		return nil,errors.New("too large msg data recv!")
 	}
 
-	fmt.Println("拆包成功：",msg)
-	fmt.Println("拆包成功dataLen：",msg.DataLen)
-	fmt.Println("拆包成功id：",msg.Id)
-	fmt.Println("拆包成功[]byte：",dataBuff)
+	//fmt.Println("拆包成功：",msg)
+	//fmt.Println("拆包成功dataLen：",msg.DataLen)
+	//fmt.Println("拆包成功id：",msg.Id)
+	//fmt.Println("拆包成功[]byte：",dataBuff)
 	return msg,nil
 }
