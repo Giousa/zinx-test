@@ -15,6 +15,6 @@ type IServer interface {
 	Run()
 
 	//路由
-	AddRouter(router IRouter)
+	AddRouter(msgID uint32,router IRouter)
 
 }
