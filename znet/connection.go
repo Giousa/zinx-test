@@ -22,8 +22,13 @@ type Connection struct {
 	isClosed bool
 	//与当前链接所绑定的业务处理方法
 	//HandlerAPI ziface.HandlerFunc
-	//告知当前链接已经退出/停止的channel
+	//告知当前链接已经退出/停止的channel，由reader告知
 	ExitChan chan bool
+
+	//无缓冲d管道，用于读、写 goroutine之间消息通信
+	msgChan chan []byte
+
+
 	//该链接，处理的方法Router
 	//Router ziface.IRouter
 	MsgHandler ziface.IMsgHandler
@@ -37,12 +42,16 @@ func NewConnection(conn *net.TCPConn, connID uint32, msgHandler ziface.IMsgHandl
 		ConnID: connID,
 		MsgHandler: msgHandler,
 		isClosed: false,
+		msgChan: make(chan []byte),
 		ExitChan: make(chan bool,1),
 	}
 
 	return &c
 }
 
+/**
+	读
+ */
 func (c *Connection) StartReader()  {
 	fmt.Println("Reader Goroutine is Running...")
 
@@ -112,6 +121,32 @@ func (c *Connection) StartReader()  {
 
 }
 
+/**
+	写消息的goroutine，专门处理写
+*/
+func (c *Connection) StartWriter()  {
+	fmt.Println("[Writer Goroutine is running...]")
+	defer fmt.Println(c.RemoteAddr().String()," [conn Writer exit!]")
+
+	//不断阻塞的等待channel消息，进行写给客户端
+	for{
+		select {
+		case data := <- c.msgChan:
+
+			if _,err := c.Conn.Write(data);err != nil{
+				fmt.Println("Send data error,",err)
+				return
+			}
+
+		case <-c.ExitChan:
+			//reader 退出了 ,writer也要跟着退出
+			return
+
+
+		}
+	}
+}
+
 //服务端发送数据,需要将数据，封包后发送
 func (c *Connection) SendMsg(msgId uint32,data []byte) error{
 
@@ -129,14 +164,20 @@ func (c *Connection) SendMsg(msgId uint32,data []byte) error{
 		return errors.New("Pack msg error")
 	}
 
-	_,errW := c.GetTCPConnection().Write(binaryMsg)
-	if errW != nil {
-		fmt.Println("Write msg error ",err)
-		return errors.New("Write msg error")
-	}
+	//发送数据，修改为，写给通道
+	//_,errW := c.GetTCPConnection().Write(binaryMsg)
+	//if errW != nil {
+	//	fmt.Println("Write msg error ",err)
+	//	return errors.New("Write msg error")
+	//}
+	//修改为，写给通道
+	c.msgChan <- binaryMsg
 
 	return nil
 }
+
+
+
 
 
 //启动链接Start()
@@ -144,6 +185,11 @@ func (c *Connection) Start(){
 	fmt.Println("Conn start...ConnID = ",c.ConnID)
 	//启动从当前链接的读数据业务
 	go c.StartReader()
+
+
+	go c.StartWriter()
+
+
 }
 
 //停止链接Stop()
